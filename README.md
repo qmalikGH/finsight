@@ -49,6 +49,17 @@ ollama pull qwen2.5-coder:7b
 streamlit run app.py
 ```
 
+## API Server Configuration
+The API server (`mcp_server.py`) reads its API keys from the environment, so no secrets live in the code.
+
+```bash
+cp .env.example .env        # then set FINSIGHT_API_KEYS to your own random value
+pip install python-dotenv   # optional: loads .env automatically
+uvicorn mcp_server:app
+```
+
+`.env` is git-ignored. Several keys can be given comma-separated.
+
 ## Example Queries
 - *"Show me total revenue by region"*
 - *"Which cost center has the highest expenses?"*

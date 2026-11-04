@@ -9,7 +9,14 @@ from qdrant_client.models import VectorParams, Distance, PointStruct
 from sentence_transformers import SentenceTransformer
 import logging
 import datetime
+import os
 import re
+
+try:
+    from dotenv import load_dotenv  # optional: pip install python-dotenv
+    load_dotenv()
+except ImportError:
+    pass  # without python-dotenv, set FINSIGHT_API_KEYS as an environment variable
 
 # ── Logging / Audit Trail ──────────────────────────────────────────────
 logging.basicConfig(
@@ -21,12 +28,16 @@ logging.basicConfig(
 app = FastAPI(title="FinSight MCP Server")
 
 # ── API Key Auth ───────────────────────────────────────────────────────
-API_KEYS = {"finsight-secret-key-123"}  # später aus .env laden
+# Keys come from the environment (.env locally, never committed).
+# Multiple keys: comma-separated, e.g. FINSIGHT_API_KEYS=key1,key2
+API_KEYS = {k.strip() for k in os.getenv("FINSIGHT_API_KEYS", "").split(",") if k.strip()}
+if not API_KEYS:
+    raise RuntimeError("FINSIGHT_API_KEYS is not set - copy .env.example to .env and set your own key")
 api_key_header = APIKeyHeader(name="X-API-Key")
 
 def verify_api_key(key: str = Depends(api_key_header)):
     if key not in API_KEYS:
-        logging.warning(f"Unauthorized access attempt with key: {key}")
+        logging.warning(f"Unauthorized access attempt with key: {key[:4]}***")  # never log full keys
         raise HTTPException(status_code=403, detail="Invalid API Key")
     return key
 
